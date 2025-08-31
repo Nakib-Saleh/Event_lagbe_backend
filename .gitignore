@@ -39,11 +39,10 @@ application-local.properties
 src/main/resources/firebase-service-account.json
 
 # Application Properties (contains sensitive data)
-src/main/resources/application.properties
-src/main/resources/application-*.properties
+src/main/resources/application-local.properties
 
 # Keep only non-sensitive properties
-!src/main/resources/application-example.properties
+!src/main/resources/application.properties
 !src/main/resources/application-railway.properties
 
 RAILWAY_DEPLOYMENT.md
