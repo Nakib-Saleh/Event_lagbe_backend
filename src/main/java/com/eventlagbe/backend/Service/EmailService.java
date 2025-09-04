@@ -1,6 +1,7 @@
 package com.eventlagbe.backend.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -12,14 +13,29 @@ public class EmailService {
 
     @Autowired
     private JavaMailSender mailSender;
+    
+    @Value("${spring.mail.username:}")
+    private String mailUsername;
+    
+    @Value("${spring.mail.host:}")
+    private String mailHost;
 
     public void sendEmailToParticipants(String subject, String message, List<String> participantEmails, String fromEmail) {
+        // Check if email configuration is available
+        if (mailUsername == null || mailUsername.isEmpty() || mailHost == null || mailHost.isEmpty()) {
+            System.err.println("Email configuration is not properly set. Skipping email sending.");
+            System.err.println("MAIL_USERNAME: " + (mailUsername != null && !mailUsername.isEmpty() ? "SET" : "NOT SET"));
+            System.err.println("MAIL_HOST: " + (mailHost != null && !mailHost.isEmpty() ? "SET" : "NOT SET"));
+            return;
+        }
+        
         int successCount = 0;
         int failureCount = 0;
         
         System.out.println("Starting to send emails to " + participantEmails.size() + " participants");
         System.out.println("From email: " + fromEmail);
         System.out.println("Subject: " + subject);
+        System.out.println("Using SMTP host: " + mailHost);
         
         for (String email : participantEmails) {
             try {
@@ -27,10 +43,10 @@ public class EmailService {
                 mailMessage.setTo(email);
                 mailMessage.setSubject(subject);
                 mailMessage.setText(message);
-                mailMessage.setFrom("eventlagbe@gmail.com"); // Must match authenticated account
+                mailMessage.setFrom(mailUsername); // Use configured email
                 
                 // Add Reply-To header to show organization's email
-                if (!fromEmail.equals("eventlagbe@gmail.com")) {
+                if (!fromEmail.equals(mailUsername)) {
                     mailMessage.setReplyTo(fromEmail);
                 }
                 
@@ -40,7 +56,13 @@ public class EmailService {
             } catch (Exception e) {
                 failureCount++;
                 System.err.println("Failed to send email to " + email + ": " + e.getMessage());
-                e.printStackTrace();
+                if (e.getCause() != null) {
+                    System.err.println("Root cause: " + e.getCause().getMessage());
+                }
+                // Don't print full stack trace for timeout errors to reduce log noise
+                if (!e.getMessage().contains("timeout") && !e.getMessage().contains("Connect timed out")) {
+                    e.printStackTrace();
+                }
             }
         }
         
@@ -49,19 +71,27 @@ public class EmailService {
 
     // Overloaded method for backward compatibility
     public void sendEmailToParticipants(String subject, String message, List<String> participantEmails) {
-        sendEmailToParticipants(subject, message, participantEmails, "eventlagbe@gmail.com");
+        sendEmailToParticipants(subject, message, participantEmails, mailUsername != null ? mailUsername : "eventlagbe@gmail.com");
     }
 
     public void sendEmailToSingleParticipant(String to, String subject, String message) {
+        // Check if email configuration is available
+        if (mailUsername == null || mailUsername.isEmpty() || mailHost == null || mailHost.isEmpty()) {
+            System.err.println("Email configuration is not properly set. Cannot send email to " + to);
+            throw new RuntimeException("Email configuration is not properly set");
+        }
+        
         try {
             SimpleMailMessage mailMessage = new SimpleMailMessage();
             mailMessage.setTo(to);
             mailMessage.setSubject(subject);
             mailMessage.setText(message);
-            mailMessage.setFrom("eventlagbe@gmail.com");
+            mailMessage.setFrom(mailUsername);
             
             mailSender.send(mailMessage);
+            System.out.println("Successfully sent email to: " + to);
         } catch (Exception e) {
+            System.err.println("Failed to send email to " + to + ": " + e.getMessage());
             throw new RuntimeException("Failed to send email to " + to, e);
         }
     }

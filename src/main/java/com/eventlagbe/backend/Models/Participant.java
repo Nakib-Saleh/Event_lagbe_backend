@@ -27,7 +27,7 @@ public class Participant {
     private String bannerUrl = "https://res.cloudinary.com/dfvwazcdk/image/upload/v1753513555/banner_z0sar4.png";
     private List<String> idDocumentUrls;
     private boolean isVerified = false;
-    private List<String> interestedSkills = new ArrayList<>(List.of("Competitive Programming", "Web Development"));
+    private List<String> interestedSkills = new ArrayList<>();
 
     private List<String> bookmarkedEventIds = new ArrayList<>();
     private List<String> registeredEventIds = new ArrayList<>();
