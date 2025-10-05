@@ -21,7 +21,7 @@ public class EmailService {
     private String mailHost;
 
     public void sendEmailToParticipants(String subject, String message, List<String> participantEmails, String fromEmail) {
-        // Check if email configuration is available
+        
         if (mailUsername == null || mailUsername.isEmpty() || mailHost == null || mailHost.isEmpty()) {
             System.err.println("Email configuration is not properly set. Skipping email sending.");
             System.err.println("MAIL_USERNAME: " + (mailUsername != null && !mailUsername.isEmpty() ? "SET" : "NOT SET"));
@@ -43,9 +43,9 @@ public class EmailService {
                 mailMessage.setTo(email);
                 mailMessage.setSubject(subject);
                 mailMessage.setText(message);
-                mailMessage.setFrom(mailUsername); // Use configured email
+                mailMessage.setFrom(mailUsername); 
                 
-                // Add Reply-To header to show organization's email
+                
                 if (!fromEmail.equals(mailUsername)) {
                     mailMessage.setReplyTo(fromEmail);
                 }
@@ -59,7 +59,7 @@ public class EmailService {
                 if (e.getCause() != null) {
                     System.err.println("Root cause: " + e.getCause().getMessage());
                 }
-                // Don't print full stack trace for timeout errors to reduce log noise
+                
                 if (!e.getMessage().contains("timeout") && !e.getMessage().contains("Connect timed out")) {
                     e.printStackTrace();
                 }
@@ -69,13 +69,13 @@ public class EmailService {
         System.out.println("Email sending completed. Success: " + successCount + ", Failed: " + failureCount);
     }
 
-    // Overloaded method for backward compatibility
+    
     public void sendEmailToParticipants(String subject, String message, List<String> participantEmails) {
         sendEmailToParticipants(subject, message, participantEmails, mailUsername != null ? mailUsername : "eventlagbe@gmail.com");
     }
 
     public void sendEmailToSingleParticipant(String to, String subject, String message) {
-        // Check if email configuration is available
+        
         if (mailUsername == null || mailUsername.isEmpty() || mailHost == null || mailHost.isEmpty()) {
             System.err.println("Email configuration is not properly set. Cannot send email to " + to);
             throw new RuntimeException("Email configuration is not properly set");
